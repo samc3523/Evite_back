@@ -1,15 +1,45 @@
 #[macro_use] extern crate rocket;
-use rocket::serde::{Deserialize, Serialize};
-use rocket::serde::json::Json;
+use diesel::{table, Insertable, Queryable};
+use rocket::{fairing::AdHoc, serde::json::Json, State};
+use serde::{Deserialize, Serialize};
+use rocket_sync_db_pools::{database, diesel};
+
+#[derive(Deserialize)]
+struct Config {
+    name: String,
+    age: u8,
+}
 
 
+#[get("/config")]
+fn get_config(config: &State<Config>) -> String {
+    format!(
+      "Hello, {}! You are {} years old.", config.name, config.age
+   )
+}
 
-#[derive(Serialize, Deserialize)]
+
+table! {
+    guests (id) {
+        id -> Int4,
+        gname -> Varchar,
+        email -> Varchar,
+        phone -> Varchar,
+        msg -> Text,
+        coming -> Bool,
+    }
+}
+
+#[database("my_db")]
+pub struct Db(diesel::PgConnection);
+#[derive(Serialize, Deserialize, Queryable, Debug, Insertable)]
+#[diesel(table_name = guests)]
 struct Guest {
     id: i32,
-    name: String,
+    gname: String,
     email: String,
-    phone:String,
+    phone: String,
+    msg: String,
     coming: bool,
 }
 
@@ -23,9 +53,10 @@ fn get_random_guest() -> Json<Guest> {
     Json(
         Guest {
             id: 1,
-            name: "Samuel test".to_string(),
+            gname: "Samuel test".to_string(),
             email: "fake@email.com".to_string(),
             phone:"508-269-3523".to_string(),
+            msg: "fiouaergvoaerog".to_string(),
             coming: true,
 
         }
@@ -38,9 +69,10 @@ fn get_guest(id: i32) -> Json<Guest> {
     Json(
       Guest {
         id,
-        name: "Samuel 2test".to_string(),
+        gname: "Samuel 2test".to_string(),
         email: "fake2@fake.com".to_string(),
         phone:"508-269-3523".to_string(),
+        msg: "fiouaergvoaerog".to_string(),
         coming: true,
 
       }
@@ -52,16 +84,18 @@ fn get_all_guests() -> Json<Vec<Guest>> {
     Json(vec![
         Guest {
             id: 0,
-            name: "Samuel 0test".to_string(),
+            gname: "Samuel 0test".to_string(),
             email: "fake2@fake.com".to_string(),
             phone:"508-269-3523".to_string(),
+            msg: "fiouaergvoaerog".to_string(),
             coming: true,
         },
         Guest {
             id: 1,
-            name: "Samuel 3test".to_string(),
+            gname: "Samuel 3test".to_string(),
             email: "fake2@fake.com".to_string(),
             phone:"508-269-3523".to_string(),
+            msg: "fiouaergvoaerog".to_string(),
             coming: true,
 
         }
@@ -77,20 +111,14 @@ fn new_guest(guest: Json<Guest>) -> Json<Guest> {
 
 
 
-
-
-
-
-
-
-
-
 #[launch]
 fn rocket() -> _ {
     let rocket= rocket::build();
     
     rocket
-      .mount("/", routes![index])
+      .attach(Db::fairing())
+      .attach(AdHoc::config::<Config>())
+      .mount("/", routes![index,get_config])
       .mount("/guests", routes![get_all_guests,get_random_guest,get_guest,new_guest])
 
 }

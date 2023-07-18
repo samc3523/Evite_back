@@ -1,3 +1,13 @@
+# ./Rocket.toml
+[default]
+name = "raimi"
+age = 20
+
+
 [global]
 address = "0.0.0.0"
 port = 80
+
+[default.databases.my_db]
+url = "postgres://samc:ONioTjNktoOlkqabdh4WOVhzNFeQClxl@dpg-ciregcdgkuvgs6oteql0-a.ohio-postgres.render.com/onset_s0e9"
+pool_size = 2
