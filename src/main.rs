@@ -1,24 +1,11 @@
 #[macro_use] extern crate rocket;
 use diesel::{table, Insertable, Queryable};
-use rocket::{fairing::AdHoc, serde::json::Json, State};
+use rocket::serde::json::Json;
 use serde::{Deserialize, Serialize};
 use rocket_sync_db_pools::{database, diesel};
+use diesel::RunQueryDsl;
 
-#[derive(Deserialize)]
-struct Config {
-    name: String,
-    age: u8,
-}
-
-
-#[get("/config")]
-fn get_config(config: &State<Config>) -> String {
-    format!(
-      "Hello, {}! You are {} years old.", config.name, config.age
-   )
-}
-
-
+// orm set up and mapping 
 table! {
     guests (id) {
         id -> Int4,
@@ -30,7 +17,7 @@ table! {
     }
 }
 
-#[database("my_db")]
+#[database("my_db")]  //connects to the config in Rocket.toml that points to postgres url
 pub struct Db(diesel::PgConnection);
 #[derive(Serialize, Deserialize, Queryable, Debug, Insertable)]
 #[diesel(table_name = guests)]
@@ -43,28 +30,15 @@ struct Guest {
     coming: bool,
 }
 
-#[get("/")]
+#[get("/")]   //returns hello world
 fn index() -> &'static str {
     "Hello, world!"
 }
 
-#[get("/random")]
-fn get_random_guest() -> Json<Guest> {
-    Json(
-        Guest {
-            id: 1,
-            gname: "Samuel test".to_string(),
-            email: "fake@email.com".to_string(),
-            phone:"508-269-3523".to_string(),
-            msg: "fiouaergvoaerog".to_string(),
-            coming: true,
-
-        }
-    )
-}
 
 
-#[get("/<id>")]
+
+#[get("/<id>")]  //returns a single guest using id 
 fn get_guest(id: i32) -> Json<Guest> {
     Json(
       Guest {
@@ -78,37 +52,34 @@ fn get_guest(id: i32) -> Json<Guest> {
       }
     )
 }
-
 #[get("/")]
-fn get_all_guests() -> Json<Vec<Guest>> {
-    Json(vec![
-        Guest {
-            id: 0,
-            gname: "Samuel 0test".to_string(),
-            email: "fake2@fake.com".to_string(),
-            phone:"508-269-3523".to_string(),
-            msg: "fiouaergvoaerog".to_string(),
-            coming: true,
-        },
-        Guest {
-            id: 1,
-            gname: "Samuel 3test".to_string(),
-            email: "fake2@fake.com".to_string(),
-            phone:"508-269-3523".to_string(),
-            msg: "fiouaergvoaerog".to_string(),
-            coming: true,
-
-        }
-      ]
-    )
+async fn get_all_guests(connection: Db) -> Json<Vec<Guest>> {
+    connection
+        .run(|c| guests::table.load(c))
+        .await
+        .map(Json)
+        .expect("Failed to fetch guests")
 }
 
 
-#[post("/", data = "<guest>")]
-fn new_guest(guest: Json<Guest>) -> Json<Guest> {
-    guest
-}
 
+#[post("/", data = "<new_guest>")]
+async fn new_guest(
+  connection: Db,
+  new_guest: Json<Guest>,
+) -> Json<Guest> {
+  
+    connection
+        .run(move |c| {
+            diesel::insert_into(guests::table)
+                .values(&new_guest.into_inner())
+                .get_result(c)
+        })
+        .await
+        .map(Json)
+        .expect("boo")
+  
+}
 
 
 #[launch]
@@ -117,9 +88,8 @@ fn rocket() -> _ {
     
     rocket
       .attach(Db::fairing())
-      .attach(AdHoc::config::<Config>())
-      .mount("/", routes![index,get_config])
-      .mount("/guests", routes![get_all_guests,get_random_guest,get_guest,new_guest])
+      .mount("/", routes![index])
+      .mount("/guests", routes![get_all_guests,get_guest,new_guest])
 
 }
 
