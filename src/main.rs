@@ -86,21 +86,22 @@ async fn get_all_guests(connection: Db) -> Json<Vec<Guest>> {
 
 
 
-#[post("/", data = "<new_guest>")]
+#[post("/", data = "<guest>")]
 async fn new_guest(
   connection: Db,
-  new_guest: Json<Guest>,
+  guest: Json<Guest>,
 ) -> Json<Guest> {
   
     connection
         .run(move |c| {
             diesel::insert_into(guests::table)
-                .values(&new_guest.into_inner())
+                .values(&guest.into_inner())
                 .get_result(c)
         })
         .await
         .map(Json)
-        .expect("boo")
+        .expect("boo")  //think whats happening here is this is failing returning the expect string :"boo" which 
+        // is not json and fails cors 
   
 }
 
