@@ -100,7 +100,7 @@ async fn new_guest(
         })
         .await
         .map(Json)
-        
+        .expect("boo")
   
 }
 
