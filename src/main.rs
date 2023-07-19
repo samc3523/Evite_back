@@ -25,6 +25,9 @@ impl Fairing for CORS {
         response.set_header(Header::new("Access-Control-Allow-Credentials", "true"));
     }
 }
+
+
+
 // orm set up and mapping 
 table! {
     guests (id) {
@@ -97,7 +100,7 @@ async fn new_guest(
         })
         .await
         .map(Json)
-        .expect("boo")
+        
   
 }
 
