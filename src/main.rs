@@ -91,8 +91,7 @@ pub struct NewGuest {
     pub gname: String,
     pub email: String,
     pub phone: String,
-    pub msg: String,
-    pub coming: bool
+    pub msg: String
 
 }
 
