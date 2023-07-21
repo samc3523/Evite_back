@@ -84,12 +84,23 @@ async fn get_all_guests(connection: Db) -> Json<Vec<Guest>> {
         .expect("Failed to fetch guests")
 }
 
+#[derive(Deserialize, Insertable, Debug)]
+#[serde(crate = "rocket::serde")]
+#[table_name = "guests"]
+pub struct NewGuest {
+    pub gname: String,
+    pub email: String,
+    pub phone: String,
+    pub msg: String,
+    pub coming: bool
+
+}
 
 
 #[post("/", data = "<guest>")]
 async fn new_guest(
   connection: Db,
-  guest: Json<Guest>,
+  guest: Json<NewGuest>,
 ) -> Json<Guest> {
   
     connection
