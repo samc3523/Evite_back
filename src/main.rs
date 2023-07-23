@@ -7,6 +7,12 @@ use diesel::RunQueryDsl;
 use rocket::http::Header;
 use rocket::{Request, Response};
 use rocket::fairing::{Fairing, Info, Kind};
+#[options("/<_..>")]
+
+fn all_options() {
+    /* Intentionally left empty */
+}
+
 pub struct CORS;
 
 #[rocket::async_trait]
