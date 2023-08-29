@@ -36,7 +36,7 @@ impl Fairing for CORS {
 
 // orm set up and mapping 
 table! {
-    guests (id) {
+    sophie_guests (id) {
         id -> Int4,
         gname -> Varchar,
         email -> Varchar,
@@ -49,7 +49,8 @@ table! {
 #[database("my_db")]  //connects to the config in Rocket.toml that points to postgres url
 pub struct Db(diesel::PgConnection);
 #[derive(Serialize, Deserialize, Queryable, Debug, Insertable)]
-#[diesel(table_name = guests)]
+#[diesel(table_name = sophie_guests)]
+
 struct Guest {
     id: i32,
     gname: String,
@@ -84,7 +85,7 @@ fn get_guest(id: i32) -> Json<Guest> {
 #[get("/")]
 async fn get_all_guests(connection: Db) -> Json<Vec<Guest>> {
     connection
-        .run(|c| guests::table.load(c))
+        .run(|c| sophie_guests::table.load(c))
         .await
         .map(Json)
         .expect("Failed to fetch guests")
@@ -92,7 +93,7 @@ async fn get_all_guests(connection: Db) -> Json<Vec<Guest>> {
 
 #[derive(Deserialize, Insertable, Debug)]
 #[serde(crate = "rocket::serde")]
-#[table_name = "guests"]
+#[table_name = "sophie_guests"]
 pub struct NewGuest {
     pub gname: String,
     pub email: String,
@@ -110,7 +111,7 @@ async fn new_guest(
   
     connection
         .run(move |c| {
-            diesel::insert_into(guests::table)
+            diesel::insert_into(sophie_guests::table)
                 .values(&guest.into_inner())
                 .get_result(c)
         })

@@ -9,5 +9,5 @@ address = "0.0.0.0"
 port = 80
 
 [default.databases.my_db]
-url = "postgres://samc:ONioTjNktoOlkqabdh4WOVhzNFeQClxl@dpg-ciregcdgkuvgs6oteql0-a.ohio-postgres.render.com/onset_s0e9"
+url = "postgres://samc:uJWRrofgnPYU9V6LBsGIL8vNZn1J6GoM@dpg-cj6ehnee546c739u6cug-a.ohio-postgres.render.com/hobbydb_2t10"
 pool_size = 2

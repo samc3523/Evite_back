@@ -1,5 +1,5 @@
 -- Your SQL goes here
-CREATE TABLE guests (
+CREATE TABLE sophie_guests (
   id SERIAL PRIMARY KEY,
   gname VARCHAR NOT NULL,
   email VARCHAR NOT NULL,
